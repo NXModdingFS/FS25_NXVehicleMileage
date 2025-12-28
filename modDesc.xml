@@ -5,10 +5,14 @@
 
     <title>
         <en>NX Vehicle Mileage</en>
+        <de>NX Fahrzeug Kilometerstand</de>
+        <fr>NX Kilométrage Du Véhicule</fr>
     </title>
 
     <description>
         <en><![CDATA[Displays vehicle mileage (distance traveled) above the working hours display. Mileage is tracked per vehicle and saved automatically.]]></en>
+        <de><![CDATA[Zeigt den Kilometerstand des Fahrzeugs (gefahrene Strecke) über der Betriebsstundenanzeige an. Der Kilometerstand wird pro Fahrzeug verfolgt und automatisch gespeichert.]]></de>
+        <fr><![CDATA[Affiche le kilométrage du véhicule (distance parcourue) au-dessus de l'affichage des heures de travail. Le kilométrage est suivi par véhicule et sauvegardé automatiquement.]]></fr>
     </description>
 
     <iconFilename>icon_NXMileageHUD.dds</iconFilename>
