@@ -54,14 +54,6 @@ local function getCurrentVehicle()
     end
 end
 
-local function getSpeedKmh(veh)
-    if veh and veh.getLastSpeed then
-        local ok, val = pcall(veh.getLastSpeed, veh)
-        if ok and val then return val end
-    end
-    return 0.0
-end
-
 local function getVehicleId(veh)
     if not veh then return nil end
     local root = veh.rootVehicle or veh
@@ -74,7 +66,10 @@ local function saveMileage()
     if not S.mileageData then return end
     
     local savegameDir = g_currentMission and g_currentMission.missionInfo and g_currentMission.missionInfo.savegameDirectory
-    if not savegameDir then return end
+    if not savegameDir then 
+        print("NXMileageHUD: No savegame directory available")
+        return 
+    end
     
     local filepath = savegameDir .. "/NXMileageData.xml"
     local xmlFile = createXMLFile("mileageXML", filepath, "mileage")
@@ -90,6 +85,9 @@ local function saveMileage()
         end
         saveXMLFile(xmlFile)
         delete(xmlFile)
+        print(string.format("NXMileageHUD: Saved mileage data for %d vehicles to %s", i, filepath))
+    else
+        print("NXMileageHUD: Failed to create XML file for saving")
     end
 end
 
@@ -97,10 +95,16 @@ local function loadMileage()
     S.mileageData = {}
     
     local savegameDir = g_currentMission and g_currentMission.missionInfo and g_currentMission.missionInfo.savegameDirectory
-    if not savegameDir then return end
+    if not savegameDir then 
+        print("NXMileageHUD: No savegame directory available for loading")
+        return 
+    end
     
     local filepath = savegameDir .. "/NXMileageData.xml"
-    if not fileExists(filepath) then return end
+    if not fileExists(filepath) then 
+        print("NXMileageHUD: No existing mileage data file found")
+        return 
+    end
     
     local xmlFile = loadXMLFile("mileageXML", filepath)
     if xmlFile and xmlFile ~= 0 then
@@ -122,16 +126,28 @@ local function loadMileage()
             i = i + 1
         end
         delete(xmlFile)
+        print(string.format("NXMileageHUD: Loaded mileage data for %d vehicles", i))
     end
 end
 
+function NXMileageHUD.saveToSavegame()
+    print("NXMileageHUD: Savegame saving, persisting mileage data...")
+    saveMileage()
+end
+
 function NXMileageHUD:loadMap()
+    print("NXMileageHUD: Loading map...")
     loadMileage()
     S.saveTimer = 0
 end
 
 function NXMileageHUD:deleteMap()
-    saveMileage()
+    print("NXMileageHUD: Deleting map...")
+    S.mileageData = nil
+    S.visible = false
+    S.text = nil
+    S.lastVehicle = nil
+    S.saveTimer = nil
 end
 
 function NXMileageHUD:update(dt)
@@ -169,31 +185,23 @@ function NXMileageHUD:update(dt)
     local isMetric = getIsMetric()
     
     if S.mileageData[vehicleId].isMetric ~= isMetric then
-    
         if isMetric then
-         
             S.mileageData[vehicleId].distance = S.mileageData[vehicleId].distance * 1.60934
         else
-  
             S.mileageData[vehicleId].distance = S.mileageData[vehicleId].distance / 1.60934
         end
- 
         S.mileageData[vehicleId].isMetric = isMetric
     end
     
-
     if veh.lastMovedDistance and veh.lastMovedDistance > 0.001 then
         if isMetric then
-            -- Store in kilometers
             local distanceKm = veh.lastMovedDistance / 1000.0
             S.mileageData[vehicleId].distance = S.mileageData[vehicleId].distance + distanceKm
         else
-            -- Store in miles
             local distanceMiles = veh.lastMovedDistance / 1609.34
             S.mileageData[vehicleId].distance = S.mileageData[vehicleId].distance + distanceMiles
         end
     end
-
 
     local totalDistance = S.mileageData[vehicleId].distance
     
@@ -236,5 +244,7 @@ function NXMileageHUD:draw()
         setTextVerticalAlignment(RenderText.VERTICAL_ALIGN_BASELINE)
     end
 end
+
+FSBaseMission.saveSavegame = Utils.appendedFunction(FSBaseMission.saveSavegame, NXMileageHUD.saveToSavegame)
 
 addModEventListener(NXMileageHUD)
