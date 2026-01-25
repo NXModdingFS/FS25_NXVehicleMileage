@@ -264,6 +264,12 @@ function NXMileageHUD:update(dt)
         return
     end
 
+    -- Check if HUD is visible
+    if g_currentMission.hud and not g_currentMission.hud:getIsVisible() then
+        S.visible = false
+        return
+    end
+
     -- Get current vehicle for display
     local veh = getCurrentVehicle()
     if not veh then
@@ -306,6 +312,11 @@ end
 
 function NXMileageHUD:draw()
     if not g_client or not S.visible or not S.text then return end
+
+    -- Additional check: don't draw if HUD is hidden
+    if g_currentMission.hud and not g_currentMission.hud:getIsVisible() then
+        return
+    end
 
     local size = getCorrectTextSize and getCorrectTextSize(0.009) or 0.009
     size = size * getUiScale()
